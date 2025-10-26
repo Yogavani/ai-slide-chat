@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+AI Slide Chat
 
-## Getting Started
+AI Slide Chat is a web application that lets users interact with an AI to generate text-based content or structured slide decks. It supports multi-line prompts, dynamic slide previews, and PPT-style navigation.
 
-First, run the development server:
+Features
 
-```bash
+Interactive AI chat interface.
+
+Multi-line text input for complex prompts.
+
+PPT-style slide preview with Previous/Next navigation.
+
+Customizable slide appearance (colors, font size, bullet points, images).
+
+Placeholder images for slides without an image.
+
+Technologies Used
+
+React / Next.js
+
+Tailwind CSS
+
+Markdown-to-JSX for rendering Markdown
+
+Fetch API for communicating with AI backend
+
+Project Setup
+
+Clone the repository:
+
+git clone https://github.com/<your-username>/<repo-name>.git
+cd <repo-name>
+
+
+Install dependencies:
+
+npm install
+# or
+yarn install
+
+
+Run the development server:
+
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open http://localhost:3000
+ in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Usage Instructions
 
-## Learn More
+Enter your prompt in the input box.
 
-To learn more about Next.js, take a look at the following resources:
+Press Enter or click Generate/Send.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+If your prompt is slide-related (like “create 3 slides about JavaScript Closures”), a PPT-style preview will appear on the right.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Navigate through slides using Previous and Next buttons.
 
-## Deploy on Vercel
+For chat-like prompts, AI responses appear as messages below the input box.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Example Prompt
+Create 3 slides about JavaScript Closures.
+For each slide, provide:
+- Slide content (title, bullet points)
+- Background color (WHITE)
+- Text color (YELLOW)
+- Font size (small, medium, large)
+- Optional image description
+Format as JSON.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Assumptions
+
+The AI backend returns valid JSON formatted slides.
+
+Multi-line input is supported for complex prompts.
+
+Slide images are optional; placeholder images are used when missing.
+
+Deployment
+
+The app can be deployed on Vercel, Netlify, or any hosting service that supports Next.js/React.
