@@ -113,6 +113,7 @@ chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
 const current = slides[currentSlide];
 
+
 return ( <div className="flex flex-col md:flex-row h-screen w-screen bg-gray-50 font-sans overflow-hidden">
 {/* Chat Section */} <div className="flex-1 flex flex-col w-full md:w-2/3"> <div className="flex-1 flex flex-col justify-center items-center px-4">
 {showWelcome ? ( <div className="w-full max-w-xl text-center"> <h1 className="text-3xl font-bold mb-2 text-gray-800">HELLO, USER</h1> <p className="text-lg mb-4 text-gray-700">
@@ -125,7 +126,6 @@ placeholder={`Ask me something....
 NOTE: You should ask templates only
 Example Prompt: Create 3 slides about JavaScript Closures.
 For each slide, provide:
-
 * Slide content (title, bullet points)
 * Background color (WHITE)
 * Text color (YELLOW)
