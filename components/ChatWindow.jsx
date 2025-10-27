@@ -3,6 +3,30 @@ import React, { useState, useRef, useEffect } from "react";
 import Markdown from "markdown-to-jsx";
 
 // --- Function to parse AI slides safely ---
+// function parseAISlides(aiResponseText) {
+//   try {
+//     const cleaned = aiResponseText
+//       .replace(/^```json\s*/, "")
+//       .replace(/```$/, "")
+//       .trim();
+
+//     const parsed = JSON.parse(cleaned);
+
+//     // ✅ Support both { slides: [...] } and plain [...] arrays
+//     if (Array.isArray(parsed)) {
+//       return parsed;
+//     } else if (parsed && Array.isArray(parsed.slides)) {
+//       return parsed.slides;
+//     } else {
+//       console.error("Unexpected AI response format:", parsed);
+//       return [];
+//     }
+//   } catch (err) {
+//     console.error("Failed to parse AI slides:", err);
+//     return [];
+//   }
+// }
+
 function parseAISlides(aiResponseText) {
   try {
     const cleaned = aiResponseText
@@ -10,23 +34,22 @@ function parseAISlides(aiResponseText) {
       .replace(/```$/, "")
       .trim();
 
+    // Try to parse JSON safely
     const parsed = JSON.parse(cleaned);
 
-    // ✅ Support both { slides: [...] } and plain [...] arrays
-    if (Array.isArray(parsed)) {
-      return parsed;
-    } else if (parsed && Array.isArray(parsed.slides)) {
-      return parsed.slides;
-    } else {
-      console.error("Unexpected AI response format:", parsed);
-      return [];
-    }
-  } catch (err) {
-    console.error("Failed to parse AI slides:", err);
+    // If it's an array of slides, return it
+    if (Array.isArray(parsed)) return parsed;
+
+    // If it’s wrapped in an object with a `slides` key
+    if (parsed.slides && Array.isArray(parsed.slides)) return parsed.slides;
+
+    console.error("Parsed JSON is not an array or slides:", parsed);
     return [];
+  } catch (err) {
+    console.warn("AI response was not valid JSON — treating as text:", aiResponseText);
+    return []; // Prevent crash and ignore non-slide responses
   }
 }
-
 
 export default function ChatWindow() {
 const [prompt, setPrompt] = useState("");
