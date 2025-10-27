@@ -2,12 +2,16 @@
   "name": "ai-slide-chat",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://yogavani.github.io/ai-slide-chat",
+
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "export": "next export",
+    "deploy": "npm run build && npm run export && gh-pages -d out"
   },
   "dependencies": {
     "@google/genai": "^1.27.0",
@@ -33,6 +37,7 @@
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
     "typescript": "^5"
