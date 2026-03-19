@@ -1841,7 +1841,7 @@ export default function ChatWindow() {
                     </svg>
                   </button>
                   <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 -top-9 whitespace-nowrap rounded-md bg-slate-900 border border-slate-700 px-2 py-1 text-xs text-slate-100 opacity-0 group-hover:opacity-100 transition">
-                    Slideshow
+                    Slideshow...
                   </span>
                 </div>
 
