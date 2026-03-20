@@ -360,11 +360,9 @@ function getSlideImageCandidates(slide) {
       continue;
     }
 
-    // Pollinations URLs work best direct, but keep proxy as a fallback.
+    // Pollinations URLs should stay direct to avoid proxy 502s on serverless hosts.
     if (/^https?:\/\/image\.pollinations\.ai\/prompt\//i.test(url)) {
       if (!resolved.includes(url)) resolved.push(url);
-      const proxiedPollinations = `/api/image?url=${encodeURIComponent(url)}`;
-      if (!resolved.includes(proxiedPollinations)) resolved.push(proxiedPollinations);
       continue;
     }
 
@@ -1185,7 +1183,7 @@ export default function ChatWindow() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(APP_STATE_KEY);
+      const raw = sessionStorage.getItem(APP_STATE_KEY);
       if (!raw) {
         setHasHydratedState(true);
         return;
@@ -1224,7 +1222,16 @@ export default function ChatWindow() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("slide_design_template");
+      localStorage.removeItem(APP_STATE_KEY);
+      localStorage.removeItem("slide_design_template");
+    } catch {
+      // Ignore localStorage cleanup issues.
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("slide_design_template");
       if (!saved) return;
       const exists = SLIDE_DESIGN_TEMPLATES.some((template) => template.id === saved);
       if (exists) setSlideDesignId(saved);
@@ -1235,7 +1242,7 @@ export default function ChatWindow() {
 
   useEffect(() => {
     try {
-      localStorage.setItem("slide_design_template", slideDesignId);
+      sessionStorage.setItem("slide_design_template", slideDesignId);
     } catch {
       // Ignore storage issues in restricted environments.
     }
@@ -1263,7 +1270,7 @@ export default function ChatWindow() {
     };
 
     try {
-      localStorage.setItem(APP_STATE_KEY, JSON.stringify(snapshot));
+      sessionStorage.setItem(APP_STATE_KEY, JSON.stringify(snapshot));
     } catch {
       // Ignore storage write issues.
     }

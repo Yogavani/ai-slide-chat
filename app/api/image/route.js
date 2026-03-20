@@ -20,26 +20,48 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unsupported protocol" }, { status: 400 });
     }
 
+    // Avoid server-side proxy fetch for providers that are more reliable direct.
+    // This prevents Netlify function timeouts/502 on long prompt URLs.
+    const host = parsed.hostname.toLowerCase();
+    if (host === "image.pollinations.ai" || host === "images.weserv.nl") {
+      return NextResponse.redirect(parsed.toString(), 307);
+    }
+
     const baseHeaders = {
       "User-Agent": "Mozilla/5.0 (compatible; AI-Slide-Chat/1.0)",
       Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
     };
 
-    let upstream = await fetch(parsed.toString(), {
-      headers: baseHeaders,
-      cache: "no-store",
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 9000);
+    let upstream;
+    try {
+      upstream = await fetch(parsed.toString(), {
+        headers: baseHeaders,
+        cache: "no-store",
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
 
     // Retry once with browser-like origin/referrer hints for hotlink-protected hosts.
     if (upstream.status === 403) {
-      upstream = await fetch(parsed.toString(), {
-        headers: {
-          ...baseHeaders,
-          Referer: `${parsed.origin}/`,
-          Origin: parsed.origin,
-        },
-        cache: "no-store",
-      });
+      const retryController = new AbortController();
+      const retryTimer = setTimeout(() => retryController.abort(), 9000);
+      try {
+        upstream = await fetch(parsed.toString(), {
+          headers: {
+            ...baseHeaders,
+            Referer: `${parsed.origin}/`,
+            Origin: parsed.origin,
+          },
+          cache: "no-store",
+          signal: retryController.signal,
+        });
+      } finally {
+        clearTimeout(retryTimer);
+      }
     }
 
     if (!upstream.ok) {

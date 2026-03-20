@@ -106,6 +106,10 @@ function withProxyCandidates(payload) {
 
   const withProxy = [...unique];
   for (const u of unique) {
+    // Keep Pollinations direct. Serverless proxying these long prompt URLs
+    // is less reliable on some hosts (e.g., Netlify timeouts/502).
+    if (/^https?:\/\/image\.pollinations\.ai\/prompt\//i.test(u)) continue;
+    if (/^https?:\/\/images\.weserv\.nl\//i.test(u)) continue;
     if (/^https?:\/\//i.test(u)) {
       const proxied = `/api/image?url=${encodeURIComponent(u)}`;
       if (!withProxy.includes(proxied)) withProxy.push(proxied);
