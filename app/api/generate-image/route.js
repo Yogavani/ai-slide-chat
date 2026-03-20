@@ -15,6 +15,7 @@ const cloudflareImageModel =
     process.env.CLOUDFLARE_IMAGE_MODEL ||
     "@cf/bytedance/stable-diffusion-xl-lightning"
   ).trim();
+const providerTimeoutMs = Number(process.env.IMAGE_PROVIDER_TIMEOUT_MS || 9000);
 
 function getTitle(slide) {
   return slide?.slide_content?.title ?? slide?.title ?? "Untitled Slide";
@@ -118,6 +119,23 @@ function withProxyCandidates(payload) {
   };
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = providerTimeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      const timeoutError = new Error(`Provider timed out after ${timeoutMs}ms`);
+      timeoutError.code = "provider_timeout";
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function generateFreeImageUrl(slide, overrideInstruction = "") {
   const prompt = buildFreeImagePrompt(slide, overrideInstruction);
 
@@ -146,17 +164,31 @@ async function generateFreeImageUrl(slide, overrideInstruction = "") {
     let res = null;
     let lastErrorText = "";
     for (const endpoint of endpoints) {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${cloudflareApiToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt,
-        }),
-        cache: "no-store",
-      });
+      let response;
+      try {
+        response = await fetchWithTimeout(
+          endpoint,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${cloudflareApiToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              prompt,
+            }),
+            cache: "no-store",
+          },
+          providerTimeoutMs
+        );
+      } catch (providerError) {
+        return {
+          error: "Cloudflare image generation timed out.",
+          status: 504,
+          details: providerError?.message || "Provider timeout",
+          canFallback: true,
+        };
+      }
       if (response.ok) {
         res = response;
         break;
@@ -247,13 +279,18 @@ async function generateFreeImageUrl(slide, overrideInstruction = "") {
 async function generatePaidImage(slide) {
   if (!openai) return null;
 
-  const image = await openai.images.generate({
-    model: "gpt-image-1",
-    prompt: `Create a clean presentation illustration. Title: ${getTitle(slide)}. Bullets: ${getBullets(slide)
-      .slice(0, 6)
-      .join("; ")}. Visual direction: ${getImageDescription(slide)}. No text overlays. 16:9 composition.`,
-    size: "1536x1024",
-  });
+  const image = await Promise.race([
+    openai.images.generate({
+      model: "gpt-image-1",
+      prompt: `Create a clean presentation illustration. Title: ${getTitle(slide)}. Bullets: ${getBullets(slide)
+        .slice(0, 6)
+        .join("; ")}. Visual direction: ${getImageDescription(slide)}. No text overlays. 16:9 composition.`,
+      size: "1536x1024",
+    }),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`OpenAI image timed out after ${providerTimeoutMs}ms`)), providerTimeoutMs)
+    ),
+  ]);
 
   const b64 = image?.data?.[0]?.b64_json;
   if (b64) {
